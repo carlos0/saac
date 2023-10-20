@@ -17,5 +17,9 @@ const port = process.env.PORT;
 
 const server = http.createServer(app);
 server.listen(port, () => {
+  const date = new Date();
+  console.log(date.getFullYear() + '-' +('0' + (date.getMonth()+1)).slice(-2)+ '-' +  
+  ('0' + date.getDate()).slice(-2) + ' '+date.getHours()+ ':'+('0' + (date.getMinutes())).slice(-2)+ ':'+date.getSeconds() + ' ' + date.getMilliseconds() + '' +  date.getUTCMilliseconds());
+  console.log(`🚀 click on http://localhost:${port}`);
   console.log(`🚀 server listening on port ${port}`);
 });
