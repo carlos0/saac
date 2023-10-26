@@ -103,8 +103,9 @@ const createVoluntariosBulk = async (req, res) => {
 
 const createVoluntario = async (req, res) => {
   const data = req.body;
+  console.log("🚀 ~ file: registro.controller.js:106 ~ createVoluntario ~ data:", data)
   try {
-    const verifCedula = await db.query('SELECT COUNT(*) FROM registro.persona WHERE cedula_identidad = $1', [data.cedula_identidad]);
+    const verifCedula = await db.query('SELECT COUNT(*) FROM registro.persona WHERE cedula_identidad = $1 AND (complemento_ci = $2 OR fecha_nacimiento = $3 )', [data.cedula_identidad, data.complemento, data.fecha_nacimiento]);
     if (verifCedula.rows[0].count == 0) {
       await db.query('BEGIN');
       const personData = utils.buildDatapersona(data);
@@ -115,8 +116,19 @@ const createVoluntario = async (req, res) => {
         const dataQuestion = await db.query(questionData.query, questionData.dataSend);
         if (dataQuestion.rowCount > 0) {
           const queryGetGeom = utils.buidlQueryGeo(data.latLng);
-          const locationData = await db.query(queryGetGeom);
-
+          let locationData;
+          if (queryGetGeom != '') {
+            locationData = await db.query(queryGetGeom);
+          } else {
+            const queryGetGeomCenter = utils.buidlQueryGeoPoint(data.id_departamento);
+            const locationPoint = await db.query(queryGetGeomCenter);
+            locationData = {rows: [{
+              "id_departamento": data.id_departamento,
+              "id_municipio": data.id_municipio,
+              "id_utc": '',
+              "geom": locationPoint.rows[0].geom,
+            }]}
+          }
           const registerData = utils.buildDataRegister(id_persona, locationData.rows[0], data.latLng);
           const dataRegister = await db.query(registerData.query, registerData.dataSend);
           if (dataRegister.rowCount > 0) {
@@ -153,11 +165,19 @@ const createVoluntario = async (req, res) => {
       }
 
     } else {
-      res.status(400).json({
-        success: false,
-        message: "La cedula ya existe.",
-        data: {},
-      });
+      if ( verifCedula.rows[0].count > 0) {
+        res.status(400).json({
+          success: false,
+          message: "La cedula ya existe.",
+          data: [verifCedula.rows[0].count],
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "La cedula ya existe.",
+          data: [],
+        });
+      }
     }
 
   } catch (error) {
