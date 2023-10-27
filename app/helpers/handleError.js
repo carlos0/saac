@@ -1,7 +1,8 @@
-const httpError = (res, err) => {
-  console.log(err);
-  res.status(500);
-  res.send({ error: "Error del Servidor!." });
-};
+class HttpError extends Error {
+  constructor (message, statusCode) {
+      super(message);
+      this.statusCode = statusCode;
+  }
+}
 
-module.exports = { httpError };
+module.exports = { HttpError };

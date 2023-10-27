@@ -43,7 +43,7 @@ const buildDatapersona = (data) => {
   personaData.id_tipo_registro, personaData.estado_persona, personaData.registrado_por];
 
   const query = `INSERT INTO registro.persona (id_persona,cedula_identidad, complemento_ci, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, mayor_edad, edad, genero, email, celular, operadora, domicilio, id_tipo_registro, estado_persona, registrado_por) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17 )`;
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17 ) RETURNING id`;
 
   return {
     query,
@@ -60,7 +60,7 @@ const builDataQuestion = (answer, id_persona) => {
   }
 
   const dataSend = [quetionData.pregunta, quetionData.respuesta, quetionData.id_persona];
-  const query = `INSERT INTO registro.respuestas (pregunta, respuesta, id_persona) VALUES ($1, $2, $3)`;
+  const query = `INSERT INTO registro.respuestas (pregunta, respuesta, id_persona) VALUES ($1, $2, $3) RETURNING id_respuesta`;
 
   return {
     query,
@@ -104,7 +104,7 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
     registerData.id_utc, registerData.metodo_registro, registerData.estado_registro];
 
     query = `INSERT INTO registro.registrados (id_persona, geom, ubicacion, id_departamento, id_municipio, id_utc, metodo_registro, estado_registro) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id_registro`;
   } else {
     registerData.id_departamental = dataLocate.id_departamento ? dataLocate.id_departamento : '';
     registerData.ubicacion_departamental = deptoSearch(dataLocate.id_departamento);
@@ -113,13 +113,62 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
       registerData.id_utc, registerData.metodo_registro, registerData.estado_registro, registerData.id_departamental, registerData.ubicacion_departamental];
 
     query = `INSERT INTO registro.registrados (id_persona, geom, ubicacion, id_departamento, id_municipio, id_utc, metodo_registro, estado_registro, id_departamental, ubicacion_departamental) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`;
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_registro`;
   }
 
   return {
     query,
     dataSend
   };
+
+}
+
+const buildDataMinEdu = (data, geoData) => {
+  let departamentoData
+  if (!data.id_departamento) {
+    const  departamento =geoData.id_departamento;
+    departamentoData = deptoNameSearch(departamento);
+  } else {
+    console.log("🚀 ~ file: utils.registro_menor.js:132 ~ buildDataMinEdu ~ else:")
+    
+    const  departamento =data.id_departamento;
+    departamentoData = deptoNameSearch(departamento);
+    console.log("🚀 ~ file: utils.registro_menor.js:136 ~ buildDataMinEdu ~ departamentoData:", departamentoData)
+  }
+  const dateRecived = data.fecha_nacimiento.split('/');
+  const birtdate = `${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`;
+
+  const dataMinEdu = {
+    'carnet_identidad': data.cedula_identidad,
+    'complemento': data.complemento ? data.complemento : '',
+    'paterno': data.apellido_paterno.toUpperCase() ? data.apellido_paterno.toUpperCase() : '',
+    'materno': data.apellido_materno.toUpperCase() ? data.apellido_materno.toUpperCase() : '',
+    'nombre': data.nombres.toUpperCase(),
+    'fecha_nacimiento': birtdate,
+    'genero': data.genero == 'Hombre' ? 'MASCULINO' : 'FEMENINO',
+    'zona_estudiante': data.domicilio.toUpperCase(),
+    'tipo_apoderado': data.tutor.tipo_apoderado.toUpperCase(),
+    'carnet_tut1': data.tutor.cedula_identidad_tutor,
+    'complemento_tut1': data.tutor.complemento_tutor ? data.tutor.complemento_tutor : '',
+    'nombre_tut1': data.tutor.nombres_tutor.toUpperCase(),
+    'paterno_tut1': data.tutor.apellido_paterno_tutor.toUpperCase() ? data.tutor.apellido_paterno_tutor.toUpperCase() : '',
+    'materno_tut1': data.tutor.apellido_materno_tutor.toUpperCase() ? data.tutor.apellido_materno_tutor.toUpperCase() : '',
+    'telefonotut1': data.tutor.celular,
+    'des_dep': departamentoData,
+    'des_dis': data.id_municipio ? data.id_municipio : '',
+    'hora_proceso': new Date()
+  }
+
+  const dataSend = [ 2000, dataMinEdu.carnet_identidad, dataMinEdu.complemento, dataMinEdu.paterno, dataMinEdu.materno, dataMinEdu.nombre, dataMinEdu.fecha_nacimiento, 
+                    dataMinEdu.genero, dataMinEdu.zona_estudiante, dataMinEdu.tipo_apoderado, dataMinEdu.carnet_tut1, dataMinEdu.complemento_tut1, dataMinEdu.nombre_tut1,
+                    dataMinEdu.paterno_tut1, dataMinEdu.materno_tut1, dataMinEdu.telefonotut1, dataMinEdu.des_dep, dataMinEdu.des_dis, dataMinEdu.hora_proceso ];
+    const query = `INSERT INTO public.datos_censo ( cen_estudiante_inscripcion_censo_id, carnet_identidad, complemento, paterno, materno, nombre, fecha_nacimiento, genero, zona_estudiante, tipo_apoderado, 
+                  carnet_tut1, complemento_tut1, nombre_tut1, paterno_tut1, materno_tut1, telefonotut1, des_dep, des_dis, hora_proceso) 
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING cen_estudiante_inscripcion_censo_id`;
+  return {
+    query,
+    dataSend
+  }
 
 }
 
@@ -161,6 +210,16 @@ const deptoPointSearch = (dataSearh) => {
   return deptoCenter;
 }
 
+const deptoNameSearch = (dataSearh) => {
+  let deptoName = '';
+  for (let i = 0; i < depto.length; i++) {
+    if (dataSearh == depto[i].cod_depto) {
+      deptoName = depto[i].depto;
+    }
+  }
+  return deptoName;
+}
+
 
 /* *Important  */
 
@@ -174,5 +233,6 @@ module.exports = {
   buildDataRegister,
   verifyCedula,
   deptoPointSearch,
-  buidlQueryGeoPoint
+  buidlQueryGeoPoint,
+  buildDataMinEdu
 };
