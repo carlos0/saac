@@ -71,7 +71,7 @@ const builDataQuestion = (answer, id_persona) => {
 const buidlQueryGeo = (latLngData) => {
   if (latLngData != '') {
     let latLng = latLngData.split(',');
-    const query = `select vm.cod_depto as id_departamento, concat(vm.cod_depto, vm.cod_prov, vm.cod_mpio) as id_municipio, vm.id as id_utc, geom.point as geom
+    const query = `select vm.cod_depto as id_departamento, concat(vm.cod_depto, vm.cod_prov, vm.cod_mpio) as id_municipio, vm.id as id_utc, vm.depto, vm.mpio, geom.point as geom
                    from marco_censal_inf.vw_municipios vm, (SELECT ST_PointFromText('POINT(${latLng[1]} ${latLng[0]})', 4326) as point) as geom
                    where ST_Contains(vm.geom, geom.point)`;
     return query;
@@ -123,22 +123,18 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
 
 }
 
-const buildDataMinEdu = (data, geoData) => {
+const buildDataMinEdu = (data, geoData, id_minEdu) => {
+  console.log("🚀 ~ file: utils.registro_menor.js:127 ~ buildDataMinEdu ~ data:", data)
   let departamentoData
-  if (!data.id_departamento) {
-    const  departamento =geoData.id_departamento;
+  if (data.id_departamento != null || data.id_departamento != '') {
+    const  departamento = data.id_departamento;
     departamentoData = deptoNameSearch(departamento);
-  } else {
-    console.log("🚀 ~ file: utils.registro_menor.js:132 ~ buildDataMinEdu ~ else:")
-    
-    const  departamento =data.id_departamento;
-    departamentoData = deptoNameSearch(departamento);
-    console.log("🚀 ~ file: utils.registro_menor.js:136 ~ buildDataMinEdu ~ departamentoData:", departamentoData)
   }
   const dateRecived = data.fecha_nacimiento.split('/');
   const birtdate = `${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`;
 
   const dataMinEdu = {
+    'id': parseInt(id_minEdu) + 1,
     'carnet_identidad': data.cedula_identidad,
     'complemento': data.complemento ? data.complemento : '',
     'paterno': data.apellido_paterno.toUpperCase() ? data.apellido_paterno.toUpperCase() : '',
@@ -154,12 +150,12 @@ const buildDataMinEdu = (data, geoData) => {
     'paterno_tut1': data.tutor.apellido_paterno_tutor.toUpperCase() ? data.tutor.apellido_paterno_tutor.toUpperCase() : '',
     'materno_tut1': data.tutor.apellido_materno_tutor.toUpperCase() ? data.tutor.apellido_materno_tutor.toUpperCase() : '',
     'telefonotut1': data.tutor.celular,
-    'des_dep': departamentoData,
-    'des_dis': data.id_municipio ? data.id_municipio : '',
+    'des_dep': departamentoData ? departamentoData : geoData.depto,
+    'des_dis': geoData.mpio,
     'hora_proceso': new Date()
   }
 
-  const dataSend = [ 2000, dataMinEdu.carnet_identidad, dataMinEdu.complemento, dataMinEdu.paterno, dataMinEdu.materno, dataMinEdu.nombre, dataMinEdu.fecha_nacimiento, 
+  const dataSend = [ dataMinEdu.id, dataMinEdu.carnet_identidad, dataMinEdu.complemento, dataMinEdu.paterno, dataMinEdu.materno, dataMinEdu.nombre, dataMinEdu.fecha_nacimiento, 
                     dataMinEdu.genero, dataMinEdu.zona_estudiante, dataMinEdu.tipo_apoderado, dataMinEdu.carnet_tut1, dataMinEdu.complemento_tut1, dataMinEdu.nombre_tut1,
                     dataMinEdu.paterno_tut1, dataMinEdu.materno_tut1, dataMinEdu.telefonotut1, dataMinEdu.des_dep, dataMinEdu.des_dis, dataMinEdu.hora_proceso ];
     const query = `INSERT INTO public.datos_censo ( cen_estudiante_inscripcion_censo_id, carnet_identidad, complemento, paterno, materno, nombre, fecha_nacimiento, genero, zona_estudiante, tipo_apoderado, 

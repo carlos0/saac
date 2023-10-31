@@ -1,5 +1,4 @@
 const db = require("../../../config/db");
-const moment = require("moment");
 const utils = require("../utils/utils.registro");
 const utils2 = require("../utils/utils.registro_menor");
 const { HttpError } = require("../../helpers/handleError");
@@ -292,19 +291,20 @@ const createMinorVoluntario = async (req, res) => {
             const registerData = utils2.buildDataRegister(id_persona, locationData.rows[0], data.latLng);
             const dataRegister = await t.query(registerData.query, registerData.dataSend);
             if (dataRegister.length > 0) {
-              const minEduData = utils2.buildDataMinEdu(data, locationData);
+              const lastID = await db2.query(`SELECT cen_estudiante_inscripcion_censo_id as id FROM public.datos_censo ORDER BY cen_estudiante_inscripcion_censo_id DESC LIMIT 1`);
+              const minEduData = utils2.buildDataMinEdu(data, locationData.rows[0], lastID[0].id);
               const dataMinEdu = await db2.query(minEduData.query, minEduData.dataSend);
               if (dataMinEdu.length > 0) {
                 return dataRegister
                 
               } else {
-                throw new Error("No se pudo dar de alta el registro. 0");
+                throw new HttpError("No se pudo dar de alta el registro. 0", 400);
               }
             } else {
-              throw new Error("No se pudo dar de alta el registro. 1");
+              throw new HttpError("No se pudo dar de alta el registro. 1", 400);
             }
           } else {
-            throw new Error("No se pudo dar de alta el registro. 2");
+            throw new HttpError("No se pudo dar de alta el registro. 2", 400);
           }
 
         } else {
@@ -322,7 +322,7 @@ const createMinorVoluntario = async (req, res) => {
           res.status(err.statusCode || 500).json({
             success: false,
             message: err.message || "Ocurrio un error.",
-            data: {},
+            data: [],
           })
         })
 
@@ -347,7 +347,7 @@ const createMinorVoluntario = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Ocurrio un error.",
-      data: {},
+      data: [],
     });
   }
 }
