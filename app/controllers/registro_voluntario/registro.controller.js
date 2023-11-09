@@ -150,28 +150,13 @@ const createVoluntario = async (req, res) => {
             });
 
           } else {
-            await db.query('ROLLBACK');
-            res.status(400).json({
-              success: false,
-              message: "No se pudo guardar.",
-              data: {},
-            })
+            throw new HttpError("No se pudo dar de alta el registro. 0", 400);
           }
         } else {
-          await db.query('ROLLBACK');
-          res.status(400).json({
-            success: false,
-            message: "No se pudo guardar.",
-            data: {},
-          })
+          throw new HttpError("No se pudo dar de alta el registro. 1", 400);
         }
       } else {
-        await db.query('ROLLBACK');
-        res.status(400).json({
-          success: false,
-          message: "No se pudo guardar.",
-          data: {},
-        });
+        throw new HttpError("No se pudo dar de alta el registro. 2", 400);
       }
 
     } else {
@@ -193,10 +178,10 @@ const createVoluntario = async (req, res) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.log(error);
-    res.status(500).json({
+    res.status(error.status ||  500).json({
       success: false,
       message: error.message || "Ocurrio un error.",
-      data: {},
+      data: [],
     });
   }
 }
@@ -261,6 +246,7 @@ const deleteVoluntario = async (req, res) => {
 
 const createMinorVoluntario = async (req, res) => {
   const data = req.body;
+  console.log("🚀data:", data)
   try {
     const verifCedula = await db.query('SELECT COUNT(*) FROM registro.persona WHERE cedula_identidad = $1 AND (complemento_ci = $2 OR fecha_nacimiento = $3 )', [data.cedula_identidad, data.complemento, data.fecha_nacimiento]);
     if (verifCedula.rows[0].count == 0) {

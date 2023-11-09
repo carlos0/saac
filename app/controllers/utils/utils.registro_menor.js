@@ -89,7 +89,7 @@ const buidlQueryGeoPoint = (id_departamento) => {
 const buildDataRegister = (id_persona, dataLocate, latLng) => {
   let registerData = {
     id_persona,
-    geom: dataLocate.geom ? dataLocate.geom : null,
+    geom: dataLocate.geom,
     ubicacion: latLng ? latLng : deptoSearch(dataLocate.id_departamento),
     id_departamento: dataLocate.id_departamento ? dataLocate.id_departamento : '',
     id_municipio: dataLocate.id_municipio ? dataLocate.id_municipio : '',
