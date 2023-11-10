@@ -11,6 +11,9 @@ const { checkAuth } = require('./app/middleware/auth')
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.get('/', function(req, res) {
+  res.json({ title: "Servicios Censo" });
+});
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use('/api/v1', require('./app/routers'))
 const port = process.env.PORT;
