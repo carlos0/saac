@@ -14,6 +14,7 @@ const generarId = () => {
 };
 /*  * important : this function is used to build the data */
 const buildDatapersona = (data) => {
+  console.log(data);
   let id = generarId();
   const dateRecived = data.fecha_nacimiento.split('/');
   const birtdate = new Date(`${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`);
@@ -124,7 +125,6 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
 }
 
 const buildDataMinEdu = (data, geoData, id_minEdu) => {
-  console.log("🚀 ~ file: utils.registro_menor.js:127 ~ buildDataMinEdu ~ data:", data)
   let departamentoData
   if (data.id_departamento != null || data.id_departamento != '') {
     const  departamento = data.id_departamento;

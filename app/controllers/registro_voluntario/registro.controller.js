@@ -54,25 +54,27 @@ const getVoluntarios = async (req, res) => {
   }
 };
 
-const getVoluntarioId = async (req, res) => {
-  const id_persona = req.params.id;
+const verifySaveVoluntario = async (req, res) => {
+  const cedula_identidad = req.query.cedula_identidad;
+  const complemento = req.query.complemento;
+  const fecha_nacimiento = req.query.fecha_nacimiento;
+
   try {
     const data = await db.query(`
     SELECT *
-    FROM persona.persona
-    WHERE id_persona = ${id_persona}`);
-    if (data) {
-      const datos = data.rows;
+    FROM registro.persona
+    WHERE cedula_identidad = '${cedula_identidad}' AND (complemento_ci = '${complemento}' OR fecha_nacimiento = '${fecha_nacimiento}')`);
+    if (data.rows.length > 0) {
       res.status(200).json({
         success: true,
         message: "exito",
-        data: datos,
+        data: { sended: true},
       });
     } else {
-      res.status(204).json({
-        success: true,
-        message: "No se pudo encontrar a la persona.",
-        data: {},
+      res.status(200).json({
+        success: false,
+        message: "No se pudo encontrar los datos.",
+        data: { sended: false},
       });
     }
   } catch (error) {
@@ -341,7 +343,7 @@ const createMinorVoluntario = async (req, res) => {
 
 module.exports = {
   getVoluntarios,
-  getVoluntarioId,
+  verifySaveVoluntario,
   createVoluntario,
   updateVoluntario,
   deleteVoluntario,

@@ -14,6 +14,7 @@ const generarId = () => {
 };
 /*  * important : this function is used to build the data */
 const buildDatapersona = (data) => {
+  console.log(data);
   let id = generarId();
   const dateRecived = data.fecha_nacimiento.split('/');
   const birtdate = new Date(`${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`);
