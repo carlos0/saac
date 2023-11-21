@@ -2,6 +2,7 @@ const db = require("../../../config/db");
 const utils = require("../utils/utils.registro");
 const utils2 = require("../utils/utils.registro_menor");
 const { HttpError } = require("../../helpers/handleError");
+const { emailSender } = require("../../services/mail/mail");
 
 
 const pgp = require('pg-promise')({
@@ -58,7 +59,7 @@ const verifySaveVoluntario = async (req, res) => {
   const cedula_identidad = req.query.cedula_identidad;
   const complemento = req.query.complemento;
   const fecha_nacimiento = req.query.fecha_nacimiento;
-
+  console.log(req.query);
   try {
     const data = await db.query(`
     SELECT *
@@ -341,6 +342,39 @@ const createMinorVoluntario = async (req, res) => {
 }
 
 
+const sendEmailConfirmation = async (req, res) => {
+  const data = req.body;
+  try {
+    const dataPersona = await db.query('SELECT * FROM registro.persona where cedula_identidad = $1 AND (complemento_ci = $2 or fecha_nacimiento = $3)', 
+                                      [data.cedula_identidad, data.complemento, data.fecha_nacimiento]);
+    if (dataPersona.rows.length == 1) {
+      if (dataPersona.rows[0].email == '') {
+        throw new HttpError("No tiene un correo registrado.", 400);
+      } else {
+          const emailSended = await emailSender(dataPersona.rows[0]);
+          if (emailSended) {
+            res.status(200).json({
+              success: true,
+              message: "Email sended successfully",
+              data: {},
+            });
+          }
+      }
+    } else if(dataPersona.rows.length > 1) {
+      throw new HttpError("Tiene una cédula de indetidad duplicada.", 400);
+    } else {
+      throw new HttpError("No tiene un regitro en la aplicación.", 400);
+    }
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Ocurrio un error.",
+      data: {},
+    });
+  }
+}
+
+
 module.exports = {
   getVoluntarios,
   verifySaveVoluntario,
@@ -348,5 +382,6 @@ module.exports = {
   updateVoluntario,
   deleteVoluntario,
   createVoluntariosBulk,
-  createMinorVoluntario
+  createMinorVoluntario,
+  sendEmailConfirmation
 };
