@@ -23,6 +23,7 @@ const buildDatapersona = (data) => {
   personaData = {
     id_persona: id,
     cedula_identidad: data.cedula_identidad,
+    expedido: data.expedido,
     complemento_ci: data.complemento ? data.complemento : '',
     nombres: data.nombres.toUpperCase(),
     apellido_paterno: data.apellido_paterno ? data.apellido_paterno.toUpperCase() : '',
@@ -36,15 +37,19 @@ const buildDatapersona = (data) => {
     operadora: data.operadora.toUpperCase(),
     domicilio: data.domicilio.toUpperCase(),
     id_tipo_registro: data.id_tipo_registro,
+    detalle_tipo: data.detalle_tipo,
+    tiene_seguro_salud: data.tiene_seguro_salud,
     estado_persona: 'REGISTRADO',
     registrado_por: data.id_usuario
   };
+  console.log("🚀 :", personaData)
   const dataSend = [personaData.id_persona, personaData.cedula_identidad, personaData.complemento_ci, personaData.nombres, personaData.apellido_paterno, personaData.apellido_materno,
   personaData.fecha_nacimiento, personaData.mayor_edad, personaData.edad, personaData.genero, personaData.email, personaData.celular, personaData.operadora, personaData.domicilio,
-  personaData.id_tipo_registro, personaData.estado_persona, personaData.registrado_por];
+  personaData.id_tipo_registro, personaData.estado_persona, personaData.registrado_por, personaData.expedido, personaData.detalle_tipo, personaData.tiene_seguro_salud];
 
-  const query = `INSERT INTO registro.persona (id_persona,cedula_identidad, complemento_ci, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, mayor_edad, edad, genero, email, celular, operadora, domicilio, id_tipo_registro, estado_persona, registrado_por) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17 )`;
+  const query = `INSERT INTO registro.persona (id_persona,cedula_identidad, complemento_ci, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, mayor_edad,
+     edad, genero, email, celular, operadora, domicilio, id_tipo_registro, estado_persona, registrado_por, expedido, detalle_tipo, tiene_seguro_salud) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20 )`;
 
   return {
     query,
@@ -73,8 +78,8 @@ const buidlQueryGeo = (latLngData) => {
   if (latLngData != '') {
     let latLng = latLngData.split(',');
     const query = `select vm.cod_depto as id_departamento, concat(vm.cod_depto, vm.cod_prov, vm.cod_mpio) as id_municipio, vm.id as id_utc, geom.point as geom
-                   from marco_censal_inf.vw_municipios vm, (SELECT ST_PointFromText('POINT(${latLng[1]} ${latLng[0]})', 4326) as point) as geom
-                   where ST_Contains(vm.geom, geom.point)`;
+                   from marco_censal_fdw.vw_municipios vm join marco_censal_fdw.municipios_espacial me on me.ord_mun = vm.ord_mun, (SELECT ST_PointFromText('POINT(${latLng[1]} ${latLng[0]})', 4326) as point) as geom
+                   where ST_Contains(me.geom, geom.point)`;
     return query;
   } else {
     return '';

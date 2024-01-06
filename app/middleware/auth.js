@@ -26,7 +26,7 @@ const checkAuth = (req, res, next) => {
     res.status(403).send({
       success: false,
       message: error.message || "Ocurrio un error.",
-      data: null,
+      data: {}
     });
   }
 };
