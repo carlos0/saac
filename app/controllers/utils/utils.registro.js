@@ -100,7 +100,7 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
     id_departamento: dataLocate.id_departamento ? dataLocate.id_departamento : '',
     id_municipio: dataLocate.id_municipio ? dataLocate.id_municipio : '',
     id_utc: dataLocate.id_utc ? dataLocate.id_utc : null,
-    metodo_registro: 'YO_CENSO_MOBILE',
+    metodo_registro: 'REGISTRO_ASISTIDO_APK',
     estado_registro: 'REGISTRADO'
   }
   let dataSend;

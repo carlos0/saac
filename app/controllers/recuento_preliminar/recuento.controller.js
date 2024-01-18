@@ -12,10 +12,11 @@ const db2 = new Pool({
 });
 
 const getDatosSectores = async (req, res) => {
+  const juridiccion = req.query.juris;
   try {
     const dataToken = utils.getDataToken(req);
     const mcUser = await db_sirejj.query(`
-    SELECT u.id_usuario, au.cod_depto, au.con_mpio, au.area, au.zona, au.con_area, au.con_zona, 
+    SELECT u.id_usuario, au.cod_depto, au.cod_prov, au.con_mpio, au.area, au.zona, au.con_area, au.con_zona, 
     au.con_area_inf, au.con_zona_inf, au.asignado_como, au.tipo
     FROM registro.usuario u left JOIN registro.asignacion_usuario au on u.id_usuario = au.id_usuario
     WHERE u.id_usuario = $1`, [dataToken.id_usuario]);
@@ -35,114 +36,258 @@ const getDatosSectores = async (req, res) => {
 
     const datosMC = [
       {
-          "disperso_amanzanado": "AMANZANADO",
+          "disperso_amanzanado": "A",
           "id_departamento": "03",
-          "id_municipio": "030701",
-          "id_area_censal": "0307010100304",
-          "id_zona_censal": "030701010030403",
-          "id_comunidad": "01003",
-          "estado_asignacion": "ACTIVO"
+          "id_municipio": "132",
+          "id_area_censal": "CAPINOTA",
+          "id_zona_censal": "04",
+          "id_comunidad": "03",
+          "estado_asignacion": "asdsadas"
       }
-  ];
-  const sectores = [
+    ];
+    const sectores = [
       {
-          "id": 676,
-          "con_zona": "030701010030403",
-          "sector": "02",
-          "sec_unico": "132085"
+        "id": 677,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "01",
+        "sec_unico": "132084",
+        "con_sec": "03070101003040301"
       },
       {
-          "id": 685,
-          "con_zona": "030701010030403",
-          "sector": "13",
-          "sec_unico": "132096"
+        "id": 676,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "02",
+        "sec_unico": "132085",
+        "con_sec": "03070101003040302"
       },
       {
-          "id": 679,
-          "con_zona": "030701010030403",
-          "sector": "05",
-          "sec_unico": "132088"
+        "id": 675,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "03",
+        "sec_unico": "132086",
+        "con_sec": "03070101003040303"
       },
       {
-          "id": 684,
-          "con_zona": "030701010030403",
-          "sector": "08",
-          "sec_unico": "132091"
+        "id": 678,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "04",
+        "sec_unico": "132087",
+        "con_sec": "03070101003040304"
       },
       {
-          "id": 678,
-          "con_zona": "030701010030403",
-          "sector": "04",
-          "sec_unico": "132087"
+        "id": 679,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "05",
+        "sec_unico": "132088",
+        "con_sec": "03070101003040305"
       },
       {
-          "id": 691,
-          "con_zona": "030701010030403",
-          "sector": "15",
-          "sec_unico": "132098"
+        "id": 681,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "06",
+        "sec_unico": "132089",
+        "con_sec": "03070101003040306"
       },
       {
-          "id": 681,
-          "con_zona": "030701010030403",
-          "sector": "06",
-          "sec_unico": "132089"
+        "id": 680,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "07",
+        "sec_unico": "132090",
+        "con_sec": "03070101003040307"
       },
       {
-          "id": 680,
-          "con_zona": "030701010030403",
-          "sector": "07",
-          "sec_unico": "132090"
+        "id": 684,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "08",
+        "sec_unico": "132091",
+        "con_sec": "03070101003040308"
       },
       {
-          "id": 688,
-          "con_zona": "030701010030403",
-          "sector": "11",
-          "sec_unico": "132094"
+        "id": 683,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "09",
+        "sec_unico": "132092",
+        "con_sec": "03070101003040309"
       },
       {
-          "id": 686,
-          "con_zona": "030701010030403",
-          "sector": "14",
-          "sec_unico": "132097"
+        "id": 682,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "10",
+        "sec_unico": "132093",
+        "con_sec": "03070101003040310"
       },
       {
-          "id": 689,
-          "con_zona": "030701010030403",
-          "sector": "16",
-          "sec_unico": "132099"
+        "id": 688,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "11",
+        "sec_unico": "132094",
+        "con_sec": "03070101003040311"
       },
       {
-          "id": 677,
-          "con_zona": "030701010030403",
-          "sector": "01",
-          "sec_unico": "132084"
+        "id": 687,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "12",
+        "sec_unico": "132095",
+        "con_sec": "03070101003040312"
       },
       {
-          "id": 683,
-          "con_zona": "030701010030403",
-          "sector": "09",
-          "sec_unico": "132092"
+        "id": 685,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "13",
+        "sec_unico": "132096",
+        "con_sec": "03070101003040313"
       },
       {
-          "id": 682,
-          "con_zona": "030701010030403",
-          "sector": "10",
-          "sec_unico": "132093"
+        "id": 686,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "14",
+        "sec_unico": "132097",
+        "con_sec": "03070101003040314"
       },
       {
-          "id": 687,
-          "con_zona": "030701010030403",
-          "sector": "12",
-          "sec_unico": "132095"
+        "id": 691,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "15",
+        "sec_unico": "132098",
+        "con_sec": "03070101003040315"
       },
       {
-          "id": 675,
-          "con_zona": "030701010030403",
-          "sector": "03",
-          "sec_unico": "132086"
+        "id": 689,
+        "tipo": "A",
+        "depto": "COCHABAMBA",
+        "con_mpio": "030701",
+        "mpio": "CAPINOTA",
+        "cod_cd_com": "01003",
+        "ciu_com": "CAPINOTA",
+        "area_cpv": "04",
+        "zona": "03",
+        "con_zona": "030701010030403",
+        "sector": "16",
+        "sec_unico": "132099",
+        "con_sec": "03070101003040316"
       }
-  ];
-  const segmentos = [
+    ];
+    const segmentos = [
       {
           "sec_unico": "132084",
           "seg_unico": "13200391",
@@ -593,12 +738,15 @@ const getDatosSectores = async (req, res) => {
           "con_seg": "0307010100304031603",
           "con_sec": "03070101003040316"
       }
-  ];
-
+    ];
+    
+    const datosQueryAC = utils.armarQueryAgentesCensales(juridiccion, mcUser.rows[0]);
+    const datosCensista = await db2.query(datosQueryAC.query, datosQueryAC.whereVariable);
+    console.log('Descargando.....')
     res.status(200).json({
       success: true,
       message: "exito",
-      data: [datosMC, sectores, segmentos]
+      data: [datosMC, sectores, segmentos, datosCensista.rows]
     });
 
   } catch (error) {

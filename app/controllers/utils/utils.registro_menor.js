@@ -24,6 +24,7 @@ const buildDatapersona = (data) => {
     id_persona: id,
     cedula_identidad: data.cedula_identidad,
     complemento_ci: data.complemento ? data.complemento : '',
+    expedido: data.expedido,
     nombres: data.nombres.toUpperCase(),
     apellido_paterno: data.apellido_paterno ? data.apellido_paterno.toUpperCase() : '',
     apellido_materno: data.apellido_materno ? data.apellido_materno.toUpperCase() : '',
@@ -36,15 +37,18 @@ const buildDatapersona = (data) => {
     operadora: data.operadora.toUpperCase(),
     domicilio: data.domicilio.toUpperCase(),
     id_tipo_registro: data.id_tipo_registro,
+    detalle_tipo: data.detalle_tipo,
+    tiene_seguro_salud: data.tiene_seguro_salud,
     estado_persona: 'REGISTRADO',
     registrado_por: data.id_usuario
   };
-  const dataSend = [personaData.id_persona, personaData.cedula_identidad, personaData.complemento_ci, personaData.nombres, personaData.apellido_paterno, personaData.apellido_materno,
+  const dataSend = [personaData.id_persona, personaData.cedula_identidad, personaData.complemento_ci, personaData.expedido, personaData.nombres, personaData.apellido_paterno, personaData.apellido_materno,
   personaData.fecha_nacimiento, personaData.mayor_edad, personaData.edad, personaData.genero, personaData.email, personaData.celular, personaData.operadora, personaData.domicilio,
-  personaData.id_tipo_registro, personaData.estado_persona, personaData.registrado_por];
+  personaData.id_tipo_registro, personaData.detalle_tipo, personaData.tiene_seguro_salud, personaData.estado_persona, personaData.registrado_por];
 
-  const query = `INSERT INTO registro.persona (id_persona,cedula_identidad, complemento_ci, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, mayor_edad, edad, genero, email, celular, operadora, domicilio, id_tipo_registro, estado_persona, registrado_por) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17 ) RETURNING id`;
+  const query = `INSERT INTO registro.persona (id_persona,cedula_identidad, complemento_ci, expedido, nombres, apellido_paterno, apellido_materno, fecha_nacimiento, mayor_edad, edad, 
+    genero, email, celular, operadora, domicilio, id_tipo_registro , detalle_tipo, tiene_seguro_salud, estado_persona, registrado_por) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20 ) RETURNING id`;
 
   return {
     query,
@@ -72,9 +76,9 @@ const builDataQuestion = (answer, id_persona) => {
 const buidlQueryGeo = (latLngData) => {
   if (latLngData != '') {
     let latLng = latLngData.split(',');
-    const query = `select vm.cod_depto as id_departamento, concat(vm.cod_depto, vm.cod_prov, vm.cod_mpio) as id_municipio, vm.id as id_utc, vm.depto, vm.mpio, geom.point as geom
-                   from marco_censal_inf.vw_municipios vm, (SELECT ST_PointFromText('POINT(${latLng[1]} ${latLng[0]})', 4326) as point) as geom
-                   where ST_Contains(vm.geom, geom.point)`;
+    const query = `select vm.cod_depto as id_departamento, concat(vm.cod_depto, vm.cod_prov, vm.cod_mpio) as id_municipio, vm.id as id_utc, geom.point as geom
+    from marco_censal_fdw.vw_municipios vm join marco_censal_fdw.municipios_espacial me on me.ord_mun = vm.ord_mun, (SELECT ST_PointFromText('POINT(${latLng[1]} ${latLng[0]})', 4326) as point) as geom
+    where ST_Contains(me.geom, geom.point)`;
     return query;
   } else {
     return '';
@@ -95,7 +99,7 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
     id_departamento: dataLocate.id_departamento ? dataLocate.id_departamento : '',
     id_municipio: dataLocate.id_municipio ? dataLocate.id_municipio : '',
     id_utc: dataLocate.id_utc ? dataLocate.id_utc : null,
-    metodo_registro: 'YO_CENSO_MOBILE',
+    metodo_registro: 'REGISTRO_MENOR_ASISTIDO_APK',
     estado_registro: 'REGISTRADO'
   }
   let dataSend;
@@ -124,43 +128,29 @@ const buildDataRegister = (id_persona, dataLocate, latLng) => {
 
 }
 
-const buildDataMinEdu = (data, geoData, id_minEdu) => {
-  let departamentoData
-  if (data.id_departamento != null || data.id_departamento != '') {
-    const  departamento = data.id_departamento;
-    departamentoData = deptoNameSearch(departamento);
-  }
-  const dateRecived = data.fecha_nacimiento.split('/');
-  const birtdate = `${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`;
+const buildDataTutor = (data, id_persona) => {
+  const dateRecived = data.tutor.fecha_nacimiento_tutor.split('/');
+  const fec_nacimiento_tutor = `${dateRecived[2]}-${dateRecived[1]}-${dateRecived[0]}`;
 
-  const dataMinEdu = {
-    'id': parseInt(id_minEdu) + 1,
-    'carnet_identidad': data.cedula_identidad,
-    'complemento': data.complemento ? data.complemento : '',
-    'paterno': data.apellido_paterno.toUpperCase() ? data.apellido_paterno.toUpperCase() : '',
-    'materno': data.apellido_materno.toUpperCase() ? data.apellido_materno.toUpperCase() : '',
-    'nombre': data.nombres.toUpperCase(),
-    'fecha_nacimiento': birtdate,
-    'genero': data.genero == 'Hombre' ? 'MASCULINO' : 'FEMENINO',
-    'zona_estudiante': data.domicilio.toUpperCase(),
-    'tipo_apoderado': data.tutor.tipo_apoderado.toUpperCase(),
-    'carnet_tut1': data.tutor.cedula_identidad_tutor,
-    'complemento_tut1': data.tutor.complemento_tutor ? data.tutor.complemento_tutor : '',
-    'nombre_tut1': data.tutor.nombres_tutor.toUpperCase(),
-    'paterno_tut1': data.tutor.apellido_paterno_tutor.toUpperCase() ? data.tutor.apellido_paterno_tutor.toUpperCase() : '',
-    'materno_tut1': data.tutor.apellido_materno_tutor.toUpperCase() ? data.tutor.apellido_materno_tutor.toUpperCase() : '',
-    'telefonotut1': data.tutor.celular,
-    'des_dep': departamentoData ? departamentoData : geoData.depto,
-    'des_dis': geoData.mpio,
-    'hora_proceso': new Date()
+  const datosTutor = {
+    id_persona: id_persona,
+    cedula_identidad_tutor: data.tutor.cedula_identidad_tutor,
+    complemento_ci_tutor: data.tutor.complemento_tutor ? data.tutor.complemento_tutor : '',
+    expedido_tutor: data.tutor.expedido_tutor,
+    apellido_paterno_tutor: data.tutor.apellido_paterno_tutor.toUpperCase() ? data.tutor.apellido_paterno_tutor.toUpperCase() : '',
+    apellido_materno_tutor: data.tutor.apellido_materno_tutor.toUpperCase() ? data.tutor.apellido_materno_tutor.toUpperCase() : '',
+    nombres_tutor: data.tutor.nombres_tutor.toUpperCase(),
+    fecha_nacimiento_tutor: fec_nacimiento_tutor,
+    email_tutor: data.tutor.email_tutor,
+    celular_tutor: data.tutor.celular_tutor,
+    estado_persona_tutor: 'REGISTRADO',
   }
 
-  const dataSend = [ dataMinEdu.id, dataMinEdu.carnet_identidad, dataMinEdu.complemento, dataMinEdu.paterno, dataMinEdu.materno, dataMinEdu.nombre, dataMinEdu.fecha_nacimiento, 
-                    dataMinEdu.genero, dataMinEdu.zona_estudiante, dataMinEdu.tipo_apoderado, dataMinEdu.carnet_tut1, dataMinEdu.complemento_tut1, dataMinEdu.nombre_tut1,
-                    dataMinEdu.paterno_tut1, dataMinEdu.materno_tut1, dataMinEdu.telefonotut1, dataMinEdu.des_dep, dataMinEdu.des_dis, dataMinEdu.hora_proceso ];
-    const query = `INSERT INTO public.datos_censo ( cen_estudiante_inscripcion_censo_id, carnet_identidad, complemento, paterno, materno, nombre, fecha_nacimiento, genero, zona_estudiante, tipo_apoderado, 
-                  carnet_tut1, complemento_tut1, nombre_tut1, paterno_tut1, materno_tut1, telefonotut1, des_dep, des_dis, hora_proceso) 
-                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING cen_estudiante_inscripcion_censo_id`;
+  const dataSend = [ datosTutor.id_persona, datosTutor.cedula_identidad_tutor, datosTutor.complemento_ci_tutor, datosTutor.expedido_tutor, datosTutor.apellido_paterno_tutor,
+    datosTutor.apellido_materno_tutor, datosTutor.nombres_tutor, datosTutor.fecha_nacimiento_tutor, datosTutor.email_tutor, datosTutor.celular_tutor, datosTutor.estado_persona_tutor ];
+    const query = `INSERT INTO registro.tutor(id_persona, cedula_identidad_tutor, complemento_ci_tutor, expedido_tutor, apellido_paterno_tutor, apellido_materno_tutor, nombres_tutor,
+                  fecha_nacimiento_tutor, email_tutor, celular_tutor, estado_persona_tutor) 
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_tutor`;
   return {
     query,
     dataSend
@@ -230,5 +220,5 @@ module.exports = {
   verifyCedula,
   deptoPointSearch,
   buidlQueryGeoPoint,
-  buildDataMinEdu
+  buildDataTutor
 };

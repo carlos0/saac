@@ -18,14 +18,6 @@ const db1 = pgp({
   host: process.env.DB_HOST,
 });
 
-const db2 = pgp({
-  database: process.env.DB_NAME_MINEDU,
-  user: process.env.DB_USER_MINEDU,
-  password: process.env.DB_PASS_MINEDU,
-  port: process.env.DB_PORT_MINEDU,
-  host: process.env.DB_HOST_MINEDU,
-});
-
 const getVoluntarios = async (req, res) => {
   try {
     const data = await db.query(`
@@ -280,12 +272,11 @@ const createMinorVoluntario = async (req, res) => {
             const registerData = utils2.buildDataRegister(id_persona, locationData.rows[0], data.latLng);
             const dataRegister = await t.query(registerData.query, registerData.dataSend);
             if (dataRegister.length > 0) {
-              const lastID = await db2.query(`SELECT cen_estudiante_inscripcion_censo_id as id FROM public.datos_censo ORDER BY cen_estudiante_inscripcion_censo_id DESC LIMIT 1`);
-              const minEduData = utils2.buildDataMinEdu(data, locationData.rows[0], lastID[0].id);
-              const dataMinEdu = await db2.query(minEduData.query, minEduData.dataSend);
-              if (dataMinEdu.length > 0) {
+              const tutorData = utils2.buildDataTutor(data, id_persona);
+              const datosTutor = await t.query(tutorData.query, tutorData.dataSend);
+              console.log("🚀 ~ db1.tx ~ datosTutor:", datosTutor)
+              if (datosTutor.length > 0) {
                 return dataRegister
-                
               } else {
                 throw new HttpError("No se pudo dar de alta el registro. 0", 400);
               }
@@ -307,7 +298,8 @@ const createMinorVoluntario = async (req, res) => {
             data: [],
           })
         }).catch((err) => {
-          console.log(err);
+          console.log('**************************************************');
+          console.log(err.message);
           res.status(err.statusCode || 500).json({
             success: false,
             message: err.message || "Ocurrio un error.",
@@ -335,7 +327,7 @@ const createMinorVoluntario = async (req, res) => {
     console.log(error);
     res.status(500).json({
       success: false,
-      message: error.message || "Ocurrio un error.",
+      message: error.message || "Ocurrio un error FUERTE.",
       data: [],
     });
   }
