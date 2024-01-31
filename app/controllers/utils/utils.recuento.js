@@ -1,5 +1,15 @@
 const jwt = require('jsonwebtoken')
 
+const generarId = () => {
+  let key = '';
+  const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  for (let i = 0; i < 16; i++) {
+    key += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return key;
+};
+
+
 const getDataToken = (req) => {
   const token = req.headers.authorization.split(" ")[1];
   const tokenDecoded = jwt.decode(token, process.env.SECRET_JWT);
@@ -33,7 +43,55 @@ const armarQueryAgentesCensales = (juris, datos) => {
   return {query, whereVariable};
 }
 
+/* ========================================== SAVE DATA ========================================== */
+/* =============================================================================================== */
+
+const armarQueryAsignacionSegmento = (id, data) => {
+  const datos = {
+    id: id,
+    id_persona: data.id_persona,
+    sec_unico: data.sec_unico,
+    con_sec: data.con_sec,
+    seg_unico: data.seg_unico,
+    con_seg: data.con_seg,
+    rol_asignado: data.rol.toUpperCase(),
+    id_usuario_registro: data.id_usuario_regisro
+  };
+  
+  const query = `INSERT INTO asignacion.segmento
+                 (id, id_persona, sec_unico, con_sec, seg_unico, con_seg, rol_asignado, id_usuario_registro) 
+                 VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+  const dataSend = [datos.id, datos.id_persona, datos.sec_unico, datos.con_sec, datos.seg_unico, datos.con_seg, datos.rol_asignado, datos.id_usuario_registro];
+
+  return {query, dataSend};
+}
+
+const armarQueryRecuento = (id, data) => {
+  const datos = {
+    id: generarId(),
+    id_asignacion_segmento: id,
+    total_viviendas: data.total_viviendas,
+    total_personas: data.total_personas,
+    total_mujeres: data.total_mujeres,
+    total_hombres: data.total_hombres,
+    observacion: '',
+    id_usuario_registro: data.id_usuario_regisro
+  }
+
+  const query = `INSERT INTO recuento.preliminar
+                 (id, id_asignacion_segmento, total_viviendas, total_personas, total_mujeres, total_hombres, observacion, id_usuario_registro)
+                 VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`;
+  
+  const dataSend = [datos.id, datos.id_asignacion_segmento, datos.total_viviendas, datos.total_personas, datos.total_mujeres, datos.total_hombres, datos.observacion,
+                    datos.id_usuario_registro];
+
+  return {query, dataSend};
+}
+
 module.exports = {
+  generarId,
   getDataToken,
-  armarQueryAgentesCensales
+  armarQueryAgentesCensales,
+  armarQueryAsignacionSegmento,
+  armarQueryRecuento
 }

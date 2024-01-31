@@ -1,14 +1,29 @@
 const db = require("../../../config/db");
 const db_sirejj = require("../../../config/db_sirejj");
+const { HttpError } = require("../../helpers/handleError");
 const utils = require("../utils/utils.recuento");
 const { Pool } = require("pg");
 
+/* TEMPORAL ELIMINAR CUANDO EXISTAN DATOS EN LAS TABLAS */
 const db2 = new Pool({
   database: process.env.DB_NAME_TEMP,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   port: process.env.DB_PORT,
   host: process.env.DB_HOST,
+});
+
+const pgp = require('pg-promise')({
+  capSQL: true,
+  schema: 'asignacion'
+});
+
+const db1 = pgp({
+  database: process.env.DB_NAME_LOCAL,
+  user: process.env.DB_USER_LOCAL,
+  password: process.env.DB_PASS_LOCAL,
+  port: process.env.DB_PORT_LOCAL,
+  host: process.env.DB_HOST_LOCAL,
 });
 
 const getDatosSectores = async (req, res) => {
@@ -754,6 +769,47 @@ const getDatosSectores = async (req, res) => {
   }
 }
 
+const guardarDatosRecuento = async (req, res) => {
+  const datos = req.body;
+  db1.tx(async (t) => {
+    const id = utils.generarId();
+    const segmentoData = utils.armarQueryAsignacionSegmento(id, datos);
+    const dataSegmento = await t.query(segmentoData.query, segmentoData.dataSend);
+    if (dataSegmento.length > 0) {
+      if (datos.total_viviendas != null) {
+        const recuentoData = utils.armarQueryRecuento(id, datos);
+        const dataRecuento = await t.query(recuentoData.query, recuentoData.dataSend);
+        if (dataRecuento.length > 0) {
+          res.status(200).json({
+            success: true,
+            message: 'Exito.',
+            data: []
+          })
+        }
+      } else {
+        res.status(200).json({
+          success: true,
+          message: 'Exito',
+          data: []
+        })
+      }
+    } else {
+      new HttpError('Error al guardar la informacion', 400)
+    }
+
+  }).catch((error) => {
+    console.log("🚀 error:", error)
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Ocurrio un error.',
+      data: []
+    })
+  })
+
+
+}
+
 module.exports = {
-  getDatosSectores
+  getDatosSectores,
+  guardarDatosRecuento
 }
