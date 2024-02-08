@@ -78,7 +78,7 @@ const armarQueryAsignacionSegmento = (id, data) => {
 
 const armarQueryRecuento = (id, data) => {
   const datos = {
-    id: generarId(),
+    id: generarId15(),
     id_asignacion_segmento: id,
     total_viviendas: data.total_viviendas,
     total_personas: data.total_personas,
