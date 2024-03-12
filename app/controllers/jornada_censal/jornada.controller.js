@@ -19,11 +19,11 @@ const obtenerDatosJornada = async (req, res) => {
     WHERE u.id_usuario = $1`, [dataToken.id_usuario]);
 
     const datosJornada = await db.query(`
-    SELECT con_zona, con_area, area_cpv, zona, sum(total_sectores) as total_sectores, sum(total_segmentos) as total_segmentos, 
-    sum(total_sectores+total_segmentos) as total_requerido
+    SELECT cod_depto, depto, con_mpio, mpio, con_zona, con_area, area_cpv, zona, sum(total_sectores) as total_sectores, 
+    sum(total_segmentos) as total_segmentos, sum(total_sectores+total_segmentos) as total_requerido
     FROM marco_censal_fdw.vw_zona_censal
     WHERE con_zona = $1
-    GROUP BY con_zona, con_area, area_cpv, zona`, [mcUser.rows[0].con_zona]);
+    GROUP BY cod_depto, depto, con_mpio, mpio, con_zona, con_area, area_cpv, zona`, [mcUser.rows[0].con_zona]);
 
     const datosUnico = await db.query(`
     SELECT DISTINCT concat(ac.ord_mun, ac.area_cpv,
@@ -47,17 +47,32 @@ const obtenerDatosJornada = async (req, res) => {
     WHERE zc.con_zona = $1`, [mcUser.rows[0].con_zona]);
 
 
+    const datosUTC = await db.query(`SELECT ord_mun FROM marco_censal_fdw.vw_municipios WHERE con_mpio = $1`, [mcUser.rows[0].con_mpio]);
+
+
     const datosParaGuardar = {
       id_usuario: dataToken.id_usuario,
       ac_campo_requerido: datosJornada.rows[0].total_requerido,
       retorno_doc_censal_requerido: datosJornada.rows[0].total_sectores,
+      cod_depto: datosJornada.rows[0].cod_depto,
+      depto: datosJornada.rows[0].depto,
+      con_mpio: datosJornada.rows[0].con_mpio,
+      cod_utc: datosUTC.rows[0].ord_mun,
+      mpio: datosJornada.rows[0].mpio,
+      con_area: datosJornada.rows[0].con_area,
+      area_unico: datosUnico.rows[0].area_unico,
+      area_cpv: datosJornada.rows[0].area_cpv,
       con_zona: datosJornada.rows[0].con_zona,
+      zona_unico: datosUnico.rows[0].zona_unico,
+      zona: datosJornada.rows[0].zona
     };
 
     const saveRegistro = await db.query(`
-    INSERT INTO jornada_censal.registro (id_usuario, ac_campo_requerido, retorno_doc_censal_requerido, con_zona)
-          VALUES ($1, $2, $3, $4) RETURNING id_registro`, [datosParaGuardar.id_usuario, datosParaGuardar.ac_campo_requerido, 
-            datosParaGuardar.retorno_doc_censal_requerido, datosParaGuardar.con_zona]);
+    INSERT INTO jornada_censal.registro (id_usuario, ac_campo_requerido, retorno_doc_censal_requerido, cod_depto, depto, con_mpio, cod_utc, mpio, 
+    con_area, area_unico, area_cpv, con_zona, zona_unico, zona) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id_registro`, 
+    [datosParaGuardar.id_usuario, datosParaGuardar.ac_campo_requerido, datosParaGuardar.retorno_doc_censal_requerido, datosParaGuardar.cod_depto, 
+     datosParaGuardar.depto, datosParaGuardar.con_mpio, datosParaGuardar.cod_utc, datosParaGuardar.mpio, datosParaGuardar.con_area, 
+     datosParaGuardar.area_unico, datosParaGuardar.area_cpv, datosParaGuardar.con_zona, datosParaGuardar.zona_unico, datosParaGuardar.zona]);
             
     const datos = {
       ...datosJornada.rows[0],
