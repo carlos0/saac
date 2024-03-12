@@ -65,7 +65,9 @@ const armarQueryAsignacionSegmento = (id, data) => {
     seg_unico: data.seg_unico,
     con_seg: data.con_seg,
     rol_asignado: data.rol.toUpperCase(),
-    id_usuario_registro: data.id_usuario_regisro
+    id_usuario_registro: data.id_usuario_regisro,
+    habilitado: data.habilitado,
+    justificacion: data.justificacion
   };
   
   const query = `INSERT INTO asignacion.segmento
