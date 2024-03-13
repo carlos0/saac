@@ -12,15 +12,19 @@ const getDatosSectores = async (req, res) => {
     au.con_area_inf, au.con_zona_inf, au.asignado_como, au.tipo
     FROM registro.usuario u left JOIN registro.asignacion_usuario au on u.id_usuario = au.id_usuario
     WHERE u.id_usuario = $1`, [dataToken.id_usuario]);
-    console.log(`🚀 DATOS USUARIO: ${mcUser.rows[0].asignado_como} - ${mcUser.rows[0].cod_depto} - ${mcUser.rows[0].con_mpio} - ${mcUser.rows[0].con_zona} - ${mcUser.rows[0].area} - ${mcUser.rows[0].zona}`);
+    console.log(`🚀 DATOS USUARIO: ${mcUser.rows[0].asignado_como} - ${mcUser.rows[0].cod_depto} - ${mcUser.rows[0].con_mpio} - ${mcUser.rows[0].area} - ${mcUser.rows[0].zona}`);
+    console.log(`🚀 AREA_ZONA: Con_area ${mcUser.rows[0].con_area} - Con_zona ${mcUser.rows[0].con_zona}`);
+
+    const con_zona_def = mcUser.rows[0].con_zona != 0 ? mcUser.rows[0].con_zona : mcUser.rows[0].con_area;
+    const area_zona = mcUser.rows[0].con_zona != 0 ? 'con_zona' : 'con_area';
 
     const datosSector = await db.query(`
     SELECT id, case when tipo = 'A' then 'AMZ' else 'DSP' end as tipo, depto, con_mpio, mpio, cod_cd_com, ciu_com, 
     area_cpv, zona, con_zona, sector, sec_unico, con_sec
     FROM marco_censal_fdw.vw_sector_censal
-    WHERE con_zona = $1
+    WHERE ${area_zona} = $1
     GROUP BY id, tipo, depto, con_mpio, mpio, cod_cd_com, ciu_com, area_cpv, zona, con_zona, sector, sec_unico, con_sec
-    ORDER BY sec_unico ASC`, [mcUser.rows[0].con_zona]);
+    ORDER BY sec_unico ASC`, [con_zona_def]);
 
     console.log("🚀 SECTORES:", datosSector.rows.length);
 
