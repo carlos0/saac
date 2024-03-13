@@ -177,9 +177,69 @@ const registroDeIncidencias = async (req, res) => {
   }
 }
 
+const obtenerDatosParaReportes = async (req, res) => {
+  const dataToken = utilsR.getDataToken(req);
+  try {
+    const mcUser = await db_sirejj.query(`
+    SELECT u.id_usuario, au.cod_depto, au.cod_prov, au.con_mpio, au.area, au.zona, au.con_area, au.con_zona, 
+    au.con_area_inf, au.con_zona_inf, au.asignado_como, au.tipo
+    FROM registro.usuario u left JOIN registro.asignacion_usuario au on u.id_usuario = au.id_usuario
+    WHERE u.id_usuario = $1`, [dataToken.id_usuario]);
+
+    const datosRegistro = await db.query(`
+    SELECT z.zona_unico, (z.total_sectores + z.total_segmentos) as total_ac, z.total_sectores as total_cajas, r.centro_op_habilitado, 
+    r.centro_op_abierto, r.ac_campo_total, r.retorno_doc_censal_total
+    FROM reportes.vw_registrados_zona_calidad2 z left join jornada_censal.registro r on z.con_zona = r.con_zona
+    WHERE z.con_area = $1
+    ORDER BY z.zona_unico;`, [mcUser.rows[0].con_area]);
+
+    const totalCajasAgeCensales = await db.query(`
+    SELECT sum(total_sectores) as total_cajas, sum(total_sectores + total_segmentos) as total_agentes_censales
+    FROM marco_censal_fdw.vw_zona_censal
+    WHERE con_area = $1`, [mcUser.rows[0].con_area]);
+
+    const datosPorcentajes = utils.calcularPorcentaje(datosRegistro.rows, totalCajasAgeCensales.rows[0]);
+
+
+    const datosIncidencia = await db.query(`
+    SELECT categoria, SUM(cantidad) AS total_cantidad, count(nivel) as cantidad_nivel 
+    FROM jornada_censal.registro r left join jornada_censal.incidencias i on r.id_registro = i.id_registro
+    WHERE con_area = $1
+    GROUP BY categoria;`, [mcUser.rows[0].con_area]);
+
+
+    const datosArea = await db.query(`
+    SELECT DISTINCT area_cpv, area_unico
+    FROM jornada_censal.registro
+    WHERE con_area = $1`, [mcUser.rows[0].con_area]);
+    
+
+    const datosSend = [
+      datosRegistro.rows,
+      [datosPorcentajes],
+      datosIncidencia.rows,
+      datosArea.rows
+    ]
+
+    res.status(200).json({
+      success: true,
+      message: 'Exito',
+      data: datosSend
+    })
+  } catch (error) {
+    console.error("🚀 obtenerDatosParaReportes:", error.message);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Ocurrio un error.",
+      data: {}
+    })
+  }
+}
+
 
 module.exports = {
   obtenerDatosJornada,
   actualizarRegistro,
-  registroDeIncidencias
+  registroDeIncidencias,
+  obtenerDatosParaReportes
 }
